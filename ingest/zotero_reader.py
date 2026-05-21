@@ -30,7 +30,9 @@ SELECT
     MAX(CASE WHEN f.fieldName = 'DOI'
              THEN idv.value END)                    AS doi,
     MAX(CASE WHEN f.fieldName = 'url'
-             THEN idv.value END)                    AS url
+             THEN idv.value END)                    AS url,
+    MAX(CASE WHEN f.fieldName = 'abstractNote'
+             THEN idv.value END)                    AS abstract
 FROM items i
 JOIN itemTypes it      ON i.itemTypeID  = it.itemTypeID
 LEFT JOIN itemData id  ON i.itemID      = id.itemID
@@ -93,7 +95,7 @@ def _extract_year(date_str: str | None) -> int | None:
 def read_library(
     db_path: Path | str = DEFAULT_ZOTERO_DB,
     storage_dir: Path | str = DEFAULT_STORAGE,
-    only_with_pdf: bool = True,
+    only_with_content: bool = True,
 ) -> pl.DataFrame:
     """Read the Zotero SQLite database and return one row per item.
 
@@ -106,12 +108,13 @@ def read_library(
         journal    str|null
         doi        str|null
         url        str|null
+        abstract   str|null  Zotero "abstractNote" field
         pdf_path   str|null  absolute path to the PDF file
 
     Args:
         db_path: path to zotero.sqlite
         storage_dir: Zotero storage/ directory
-        only_with_pdf: drop items without a resolved PDF path
+        only_with_content: drop items that have none of pdf_path, abstract, or title
     """
     db_path = Path(db_path)
     storage_dir = Path(storage_dir)
@@ -135,7 +138,17 @@ def read_library(
 
     items_df = pl.DataFrame(
         items_rows,
-        schema=["item_id", "key", "item_type", "title", "date", "journal", "doi", "url"],
+        schema=[
+            "item_id",
+            "key",
+            "item_type",
+            "title",
+            "date",
+            "journal",
+            "doi",
+            "url",
+            "abstract",
+        ],
         orient="row",
     )
 
@@ -175,26 +188,37 @@ def read_library(
                 "journal",
                 "doi",
                 "url",
+                "abstract",
                 "pdf_path",
             ]
         )
         .sort("year", descending=True, nulls_last=True)
     )
 
-    if only_with_pdf:
-        library_df = library_df.filter(pl.col("pdf_path").is_not_null())
+    if only_with_content:
+        library_df = library_df.filter(
+            pl.col("pdf_path").is_not_null()
+            | pl.col("abstract").is_not_null()
+            | pl.col("title").is_not_null()
+        )
 
     return library_df
 
 
 if __name__ == "__main__":
     library_df = read_library()
-    logger.info(f"{len(library_df)} items with a resolved PDF")
+    logger.info(f"{len(library_df)} items with content (pdf or abstract)")
     logger.info("\n{}", library_df.select(["title", "author", "year", "journal"]).head(10))
 
     logger.info("Distribution by item type:")
     logger.info("\n{}", library_df.group_by("item_type").len().sort("len", descending=True))
 
-    full_library_df = read_library(only_with_pdf=False)
+    full_library_df = read_library(only_with_content=False)
     items_without_pdf = full_library_df.filter(pl.col("pdf_path").is_null())
-    logger.info(f"{len(items_without_pdf)} items without an associated PDF")
+    items_without_either = full_library_df.filter(
+        pl.col("pdf_path").is_null() & pl.col("abstract").is_null()
+    )
+    logger.info(
+        f"{len(items_without_pdf)} items without a PDF "
+        f"({len(items_without_either)} also missing an abstract)"
+    )
