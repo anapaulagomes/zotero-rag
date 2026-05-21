@@ -6,4 +6,8 @@ dependencies = [
     "polars",
     "python-dotenv",
     "loguru",
+    "docling",
 ]
+
+[tool.uv]
+package = false
