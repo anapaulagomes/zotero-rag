@@ -1,0 +1,37 @@
+services:
+  ingest:
+    build:
+      context: .
+      dockerfile: ingest/Dockerfile
+    env_file:
+      - .env
+    environment:
+      - ZOTERO_DB=/zotero/zotero.sqlite
+      - ZOTERO_STORAGE=/zotero/storage
+      - LANCEDB_PATH=/data/lancedb
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    volumes:
+      - ~/Zotero:/zotero:ro
+      - ./data/lancedb:/data/lancedb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles: [ingest]
+
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - LANCEDB_PATH=/data/lancedb
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - RETRIEVAL_PATH=/retrieval
+    volumes:
+      - ./data/lancedb:/data/lancedb
+      - ./retrieval:/retrieval
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles: [app]
