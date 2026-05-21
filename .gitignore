@@ -170,11 +170,11 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# temporary
-schema.json
-ollama_schema.json
-opensyndrome/to_be_updated__schema.py
-
 # data
 *.csv
-!tests/fixtures/fake_dataset.csv
+
+# Zotero RAG
+data/                               # LanceDB shards: regenerable from Zotero
+app/.chainlit/*                     # Chainlit runtime artifacts (translations, caches)
+!app/.chainlit/config.toml          # ...keep only the project config
+*.log                               # parser smoke-test stderr capture etc
