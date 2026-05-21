@@ -158,18 +158,26 @@ def read_library(
     )
 
     library_df = (
-        items_df
-        .join(authors_df, on="item_id", how="left")
+        items_df.join(authors_df, on="item_id", how="left")
         .join(attachments_df, on="item_id", how="left")
         .drop("key")
         .with_columns(
             pl.col("date").map_elements(_extract_year, return_dtype=pl.Int32).alias("year")
         )
         .drop("date")
-        .select([
-            "item_id", "item_type", "title", "author",
-            "year", "journal", "doi", "url", "pdf_path",
-        ])
+        .select(
+            [
+                "item_id",
+                "item_type",
+                "title",
+                "author",
+                "year",
+                "journal",
+                "doi",
+                "url",
+                "pdf_path",
+            ]
+        )
         .sort("year", descending=True, nulls_last=True)
     )
 
