@@ -7,6 +7,9 @@ dependencies = [
     "python-dotenv",
     "loguru",
     "docling",
+    "lancedb",
+    "httpx",
+    "tqdm",
 ]
 
 [tool.uv]
