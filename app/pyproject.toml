@@ -8,6 +8,7 @@ dependencies = [
     "httpx",
     "python-dotenv",
     "loguru",
+    "polars",
 ]
 
 [tool.uv]
