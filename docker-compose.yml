@@ -10,9 +10,11 @@ services:
       - ZOTERO_STORAGE=/zotero/storage
       - LANCEDB_PATH=/data/lancedb
       - OLLAMA_HOST=http://host.docker.internal:11434
+      - HF_HOME=/cache/huggingface
     volumes:
       - ~/Zotero:/zotero:ro
       - ./data/lancedb:/data/lancedb
+      - hf-cache:/cache/huggingface
     extra_hosts:
       - "host.docker.internal:host-gateway"
     profiles: [ingest]
@@ -35,3 +37,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     profiles: [app]
+
+volumes:
+  hf-cache:
