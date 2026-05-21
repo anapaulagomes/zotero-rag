@@ -8,6 +8,7 @@ dependencies = [
     "loguru",
     "docling",
     "lancedb",
+    "pylance",
     "httpx",
     "tqdm",
 ]

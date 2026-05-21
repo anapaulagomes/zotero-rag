@@ -3226,6 +3226,24 @@ crypto = [
 ]
 
 [[package]]
+name = "pylance"
+version = "6.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lance-namespace" },
+    { name = "numpy" },
+    { name = "pyarrow" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/d8/62955613d09d6d4e4e4f1f843a9ceaa1fdeb8c3fccbcc80f4b643e65c70b/pylance-6.0.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:6bb7b1d85f19dc3bdb80e9a4dc7d2a8929346f1f941b8f43f856d24aca6adb0a", size = 56419211, upload-time = "2026-05-20T21:04:39.276Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/54/0eb4dbd5cf91f73efee17dd95b5e4069413046ec46608ab4e07fac1e447c/pylance-6.0.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5f2c7b6ee21e53cdc760a2f0618f97017c43b127bc67069fdd21bfa8d4a2c1fc", size = 59484388, upload-time = "2026-05-20T21:04:00.366Z" },
+    { url = "https://files.pythonhosted.org/packages/05/cd/8d826ddbc1ee6aa7761b4ff161eda05d5556ad059061e56e52c9f91cfe29/pylance-6.0.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c68dd8a6e356afe2c50034705cbc06829d63f05f88a6ba2d2ad693a94e8d8205", size = 63977821, upload-time = "2026-05-20T21:15:28.282Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/e9/b7eb12d6b9c7a1bc3f12c276b9eda38c84ff4b05870b4f0a7198146c2c24/pylance-6.0.1-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:eb78d63560727e0f8ec51fa8bbe5288fc5d45bde64cc3d149cc1750d996347b1", size = 59494058, upload-time = "2026-05-20T21:06:22.802Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/4a/96568c34d76d0617e6c4abd3a393b41481344806c5f437a82b15829baf28/pylance-6.0.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:7b0b9b53b2723ca28d20f442c92db78e5b0ad30cc568b2e0fd03f6f869baa879", size = 63934223, upload-time = "2026-05-20T21:16:59.727Z" },
+    { url = "https://files.pythonhosted.org/packages/47/f3/3268159f0bc0580c0d3a8d400ace784c51af6feea3e4d4c851b5b4d4b0e1/pylance-6.0.1-cp39-abi3-win_amd64.whl", hash = "sha256:b7032fc1970030402af0621d9a6c7337c45aa677e454b8a696b1ece2628c085d", size = 68664695, upload-time = "2026-05-20T21:19:13.701Z" },
+]
+
+[[package]]
 name = "pylatexenc"
 version = "2.10"
 source = { registry = "https://pypi.org/simple" }
@@ -4742,6 +4760,7 @@ dependencies = [
     { name = "httpx" },
     { name = "lancedb" },
     { name = "loguru" },
+    { name = "polars" },
     { name = "python-dotenv" },
 ]
 
@@ -4751,6 +4770,7 @@ requires-dist = [
     { name = "httpx" },
     { name = "lancedb" },
     { name = "loguru" },
+    { name = "polars" },
     { name = "python-dotenv" },
 ]
 
@@ -4764,6 +4784,7 @@ dependencies = [
     { name = "lancedb" },
     { name = "loguru" },
     { name = "polars" },
+    { name = "pylance" },
     { name = "python-dotenv" },
     { name = "tqdm" },
 ]
@@ -4775,6 +4796,7 @@ requires-dist = [
     { name = "lancedb" },
     { name = "loguru" },
     { name = "polars" },
+    { name = "pylance" },
     { name = "python-dotenv" },
     { name = "tqdm" },
 ]
