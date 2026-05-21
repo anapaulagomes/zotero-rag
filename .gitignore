@@ -173,8 +173,12 @@ cython_debug/
 # data
 *.csv
 
-# Zotero RAG
-data/                               # LanceDB shards: regenerable from Zotero
-app/.chainlit/*                     # Chainlit runtime artifacts (translations, caches)
-!app/.chainlit/config.toml          # ...keep only the project config
-*.log                               # parser smoke-test stderr capture etc
+# Zotero RAG: regenerable LanceDB shards
+data/
+
+# Chainlit runtime artifacts (translations, caches) — only the project config is committed
+app/.chainlit/*
+!app/.chainlit/config.toml
+
+# Parser smoke-test stderr capture etc
+*.log
