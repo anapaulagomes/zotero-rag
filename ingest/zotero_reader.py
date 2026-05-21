@@ -7,6 +7,7 @@ from pathlib import Path
 
 import polars as pl
 from dotenv import load_dotenv
+from loguru import logger
 
 load_dotenv()
 
@@ -180,12 +181,12 @@ def read_library(
 
 if __name__ == "__main__":
     library_df = read_library()
-    print(f"\n{len(library_df)} items with a resolved PDF\n")
-    print(library_df.select(["title", "author", "year", "journal"]).head(10))
+    logger.info(f"{len(library_df)} items with a resolved PDF")
+    logger.info("\n{}", library_df.select(["title", "author", "year", "journal"]).head(10))
 
-    print("\nDistribution by item type:")
-    print(library_df.group_by("item_type").len().sort("len", descending=True))
+    logger.info("Distribution by item type:")
+    logger.info("\n{}", library_df.group_by("item_type").len().sort("len", descending=True))
 
     full_library_df = read_library(only_with_pdf=False)
     items_without_pdf = full_library_df.filter(pl.col("pdf_path").is_null())
-    print(f"\n{len(items_without_pdf)} items without an associated PDF")
+    logger.info(f"{len(items_without_pdf)} items without an associated PDF")
