@@ -22,6 +22,20 @@ class Document(LanceModel):
     vector: Vector(EMBED_DIM)
 
 
+def existing_item_ids(db_path: str) -> set[int]:
+    """Return the set of item_ids already present in the documents table.
+
+    Used by the orchestrator to skip parsing for already-embedded items — far cheaper
+    than letting the per-item check inside embed_and_store fire after `parse_document`
+    has already done the expensive PDF work.
+    """
+    db = lancedb.connect(db_path)
+    if TABLE_NAME not in db.table_names():
+        return set()
+    arrow_table = db.open_table(TABLE_NAME).to_lance().to_table(columns=["item_id"])
+    return set(arrow_table.column("item_id").to_pylist())
+
+
 def embed_and_store(
     chunks: list[str],
     metadata: dict,
