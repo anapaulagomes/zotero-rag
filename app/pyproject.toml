@@ -1,0 +1,14 @@
+[project]
+name = "zotero-rag-app"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "chainlit",
+    "lancedb",
+    "httpx",
+    "python-dotenv",
+    "loguru",
+]
+
+[tool.uv]
+package = false
