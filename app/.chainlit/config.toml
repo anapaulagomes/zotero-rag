@@ -1,9 +1,0 @@
-[project]
-enable_telemetry = false
-
-[UI]
-name = "Zotero RAG"
-description = "Local RAG over your Zotero library"
-
-[features.spontaneous_file_upload]
-enabled = false

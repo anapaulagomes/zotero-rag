@@ -94,6 +94,7 @@ All knobs in `.env`:
 | `OLLAMA_HOST` | `http://localhost:11434` | replaced inside Docker |
 | `EMBED_MODEL` | `nomic-embed-text` | 768-dim, matches schema |
 | `LLM_MODEL` | `qwen2.5:7b-instruct` | swap freely, response quality varies |
+| `HF_TOKEN` | _(unset)_ | optional: avoids the "unauthenticated requests" warning + throttling when docling pulls models on first ingestion |
 
 ## Notes & limitations
 
