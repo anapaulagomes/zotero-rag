@@ -51,7 +51,15 @@ def _build_chunks(metadata: dict) -> tuple[list[str], str]:
     return chunks, source
 
 
+def _route_loguru_through_tqdm() -> None:
+    """Without this, loguru lines collide with tqdm's bar redraw and corrupt the display."""
+    logger.remove()
+    logger.add(lambda msg: tqdm.write(msg, end=""))
+
+
 def main() -> None:
+    _route_loguru_through_tqdm()
+
     db_path = os.environ["LANCEDB_PATH"]
     ollama_host = os.environ["OLLAMA_HOST"]
     embed_model = os.environ["EMBED_MODEL"]
