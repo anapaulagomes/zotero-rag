@@ -35,14 +35,20 @@ def _format_citation(result: dict) -> str:
     year = result.get("year")
 
     authors = [a.strip() for a in author_raw.split(";") if a.strip()]
-    if not authors:
-        surname = "Unknown"
-    else:
-        surname = authors[0].split(",")[0].strip() or "Unknown"
-        if len(authors) > 1:
-            surname = f"{surname} et al."
+    surnames = [a.split(",")[0].strip() for a in authors]
+    surnames = [s for s in surnames if s]
 
-    return f"({surname}, {year})" if year else f"({surname})"
+    # APA: one author -> surname; two -> "A & B"; three or more -> "A et al."
+    if not surnames:
+        citation = "Unknown"
+    elif len(surnames) == 1:
+        citation = surnames[0]
+    elif len(surnames) == 2:
+        citation = f"{surnames[0]} & {surnames[1]}"
+    else:
+        citation = f"{surnames[0]} et al."
+
+    return f"({citation}, {year})" if year else f"({citation})"
 
 
 if __name__ == "__main__":
