@@ -23,6 +23,7 @@ LANCEDB_PATH = os.environ["LANCEDB_PATH"]
 OLLAMA_HOST = os.environ["OLLAMA_HOST"]
 EMBED_MODEL = os.environ["EMBED_MODEL"]
 TOP_K = int(os.environ.get("TOP_K", "15"))
+SCORE_THRESHOLD = float(os.environ.get("SCORE_THRESHOLD", "0.0"))
 
 
 @cl.on_chat_start
@@ -62,7 +63,14 @@ async def on_message(message: cl.Message) -> None:
     query = message.content
 
     try:
-        results = search(query, LANCEDB_PATH, OLLAMA_HOST, EMBED_MODEL, top_k=TOP_K)
+        results = search(
+            query,
+            LANCEDB_PATH,
+            OLLAMA_HOST,
+            EMBED_MODEL,
+            top_k=TOP_K,
+            min_score=SCORE_THRESHOLD,
+        )
     except Exception as exc:
         logger.exception("search failed")
         await cl.Message(content=f"Search failed: {exc}").send()
