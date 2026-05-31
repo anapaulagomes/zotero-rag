@@ -16,7 +16,7 @@ def search(
     db_path: str,
     ollama_host: str,
     embed_model: str,
-    top_k: int = 5,
+    top_k: int = 15,
 ) -> list[dict]:
     """Embed query and return top-k chunks from LanceDB.
 

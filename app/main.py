@@ -1,10 +1,8 @@
-import json
 import os
 import sys
 from pathlib import Path
 
 import chainlit as cl
-import httpx
 import lancedb
 import polars as pl
 from dotenv import load_dotenv
@@ -17,14 +15,14 @@ _RETRIEVAL_DIR = os.environ.get("RETRIEVAL_PATH") or str(
 )
 sys.path.insert(0, _RETRIEVAL_DIR)
 
-from prompt import build_prompt  # noqa: E402
+from llm import stream_chat  # noqa: E402
+from prompt import SYSTEM_PROMPT, build_user_prompt  # noqa: E402
 from search import search  # noqa: E402
 
 LANCEDB_PATH = os.environ["LANCEDB_PATH"]
 OLLAMA_HOST = os.environ["OLLAMA_HOST"]
 EMBED_MODEL = os.environ["EMBED_MODEL"]
-LLM_MODEL = os.environ["LLM_MODEL"]
-TOP_K = 5
+TOP_K = int(os.environ.get("TOP_K", "15"))
 
 
 @cl.on_chat_start
@@ -74,31 +72,15 @@ async def on_message(message: cl.Message) -> None:
         await cl.Message(content="No relevant results found in the library.").send()
         return
 
-    prompt = build_prompt(query, results)
+    user_prompt = build_user_prompt(query, results)
     response_message = cl.Message(content="")
 
     try:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            async with client.stream(
-                "POST",
-                f"{OLLAMA_HOST}/api/chat",
-                json={
-                    "model": LLM_MODEL,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "stream": True,
-                },
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if not line:
-                        continue
-                    payload = json.loads(line)
-                    piece = payload.get("message", {}).get("content", "")
-                    if piece:
-                        await response_message.stream_token(piece)
+        async for token in stream_chat(SYSTEM_PROMPT, user_prompt):
+            await response_message.stream_token(token)
     except Exception as exc:
-        logger.exception("ollama chat failed")
-        await cl.Message(content=f"Ollama call failed: {exc}").send()
+        logger.exception("llm stream failed")
+        await cl.Message(content=f"LLM call failed: {exc}").send()
         return
 
     await response_message.send()

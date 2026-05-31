@@ -1,29 +1,33 @@
 from loguru import logger
 
-PROMPT_TEMPLATE = """\
+SYSTEM_PROMPT = """\
 You are a research assistant that answers questions based on excerpts from academic papers.
 
 RULES:
 - Respond in the same language the user asked the question in.
-- Base your answer ONLY on the excerpts provided below. Do not invent information.
+- Base your answer ONLY on the excerpts provided. Do not invent information.
+- Synthesize across excerpts: compare, contrast and connect findings from
+  different papers when relevant.
 - Cite authors and year inline, in the format: (Silva et al., 2021).
-- If the answer is not in the excerpts, say so explicitly (in the user's language).
+- If the answer is not in the excerpts, say so explicitly (in the user's language)."""
 
+USER_TEMPLATE = """\
 EXCERPTS:
 {chunks}
 
-QUESTION: {query}
-
-ANSWER:"""
+QUESTION: {query}"""
 
 
-def build_prompt(query: str, results: list[dict]) -> str:
-    """Compose the prompt sent to the LLM: instructions + retrieved chunks + question."""
+def build_user_prompt(query: str, results: list[dict]) -> str:
+    """Compose the user message: retrieved chunks + question.
+
+    System-level rules (role, citation format, language) live in SYSTEM_PROMPT.
+    """
     chunk_blocks = [
         f"[trecho {index}] {_format_citation(result)}\n{result['text']}"
         for index, result in enumerate(results, start=1)
     ]
-    return PROMPT_TEMPLATE.format(chunks="\n\n".join(chunk_blocks), query=query)
+    return USER_TEMPLATE.format(chunks="\n\n".join(chunk_blocks), query=query)
 
 
 def _format_citation(result: dict) -> str:
@@ -54,5 +58,6 @@ if __name__ == "__main__":
             "year": 2020,
         },
     ]
-    rendered = build_prompt("O que são sistemas de vigilância sindrômica?", mock_results)
-    logger.info("rendered prompt:\n{}", rendered)
+    rendered = build_user_prompt("O que são sistemas de vigilância sindrômica?", mock_results)
+    logger.info("system prompt:\n{}", SYSTEM_PROMPT)
+    logger.info("user prompt:\n{}", rendered)
