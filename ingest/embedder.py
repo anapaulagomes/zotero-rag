@@ -6,6 +6,11 @@ from loguru import logger
 EMBED_DIM = 768
 TABLE_NAME = "documents"
 
+# nomic-embed-text is trained with task prefixes; stored passages use "search_document:"
+# and queries use "search_query:". Omitting them puts queries and documents in slightly
+# different subspaces and measurably hurts retrieval.
+DOCUMENT_PREFIX = "search_document: "
+
 
 class Document(LanceModel):
     chunk_id: str
@@ -83,9 +88,10 @@ def embed_and_store(
 
 
 def _embed_batch(chunks: list[str], ollama_host: str, embed_model: str) -> list[list[float]]:
+    inputs = [f"{DOCUMENT_PREFIX}{chunk}" for chunk in chunks]
     response = httpx.post(
         f"{ollama_host}/api/embed",
-        json={"model": embed_model, "input": chunks},
+        json={"model": embed_model, "input": inputs},
         timeout=120.0,
     )
     response.raise_for_status()

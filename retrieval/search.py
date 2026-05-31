@@ -10,6 +10,9 @@ load_dotenv()
 
 TABLE_NAME = "documents"
 
+# Must match the passage prefix used at ingestion time (see ingest/embedder.py).
+QUERY_PREFIX = "search_query: "
+
 
 def search(
     query: str,
@@ -40,7 +43,7 @@ def search(
 def _embed_query(query: str, ollama_host: str, embed_model: str) -> list[float]:
     response = httpx.post(
         f"{ollama_host}/api/embed",
-        json={"model": embed_model, "input": query},
+        json={"model": embed_model, "input": f"{QUERY_PREFIX}{query}"},
         timeout=30.0,
     )
     response.raise_for_status()
