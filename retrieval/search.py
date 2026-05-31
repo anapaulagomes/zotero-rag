@@ -5,6 +5,7 @@ import httpx
 import lancedb
 from dotenv import load_dotenv
 from loguru import logger
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 load_dotenv()
 
@@ -45,6 +46,12 @@ def search(
     return [record for record in results if record["score"] >= min_score]
 
 
+@retry(
+    retry=retry_if_exception_type(httpx.TransportError),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, max=10),
+    reraise=True,
+)
 def _embed_query(query: str, ollama_host: str, embed_model: str) -> list[float]:
     response = httpx.post(
         f"{ollama_host}/api/embed",

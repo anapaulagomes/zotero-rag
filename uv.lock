@@ -4995,6 +4995,7 @@ dependencies = [
     { name = "loguru" },
     { name = "polars" },
     { name = "python-dotenv" },
+    { name = "tenacity" },
 ]
 
 [package.metadata]
@@ -5006,6 +5007,7 @@ requires-dist = [
     { name = "loguru" },
     { name = "polars" },
     { name = "python-dotenv" },
+    { name = "tenacity" },
 ]
 
 [[package]]
@@ -5020,6 +5022,7 @@ dependencies = [
     { name = "polars" },
     { name = "pylance" },
     { name = "python-dotenv" },
+    { name = "tenacity" },
     { name = "tqdm" },
 ]
 
@@ -5032,5 +5035,6 @@ requires-dist = [
     { name = "polars" },
     { name = "pylance" },
     { name = "python-dotenv" },
+    { name = "tenacity" },
     { name = "tqdm" },
 ]

@@ -2,6 +2,7 @@ import httpx
 import lancedb
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 EMBED_DIM = 768
 TABLE_NAME = "documents"
@@ -87,6 +88,14 @@ def embed_and_store(
     return len(records)
 
 
+# Retry only transient transport errors (connection refused, timeouts): a bad model
+# name or malformed request raises HTTPStatusError and should fail fast instead.
+@retry(
+    retry=retry_if_exception_type(httpx.TransportError),
+    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=1, max=30),
+    reraise=True,
+)
 def _embed_batch(chunks: list[str], ollama_host: str, embed_model: str) -> list[list[float]]:
     inputs = [f"{DOCUMENT_PREFIX}{chunk}" for chunk in chunks]
     response = httpx.post(

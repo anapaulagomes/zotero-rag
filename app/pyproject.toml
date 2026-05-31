@@ -10,6 +10,7 @@ dependencies = [
     "python-dotenv",
     "loguru",
     "polars",
+    "tenacity",
 ]
 
 [tool.uv]
