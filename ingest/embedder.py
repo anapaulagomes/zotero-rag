@@ -7,6 +7,10 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 EMBED_DIM = 768
 TABLE_NAME = "documents"
 
+# Below this row count, LanceDB's IVF_PQ index can't train a meaningful codebook and
+# brute-force KNN is fast enough anyway, so we skip building an index.
+MIN_ROWS_FOR_INDEX = 256
+
 # nomic-embed-text is trained with task prefixes; stored passages use "search_document:"
 # and queries use "search_query:". Omitting them puts queries and documents in slightly
 # different subspaces and measurably hurts retrieval.
@@ -40,6 +44,30 @@ def existing_item_ids(db_path: str) -> set[int]:
         return set()
     arrow_table = db.open_table(TABLE_NAME).to_lance().to_table(columns=["item_id"])
     return set(arrow_table.column("item_id").to_pylist())
+
+
+def create_vector_index(db_path: str) -> None:
+    """Build an ANN index on the documents table after ingestion.
+
+    LanceDB falls back to brute-force KNN until an index exists — fine for a few thousand
+    chunks, but latency grows linearly with the table. A failure here is non-fatal: queries
+    still work (just unindexed), so we log and move on.
+    """
+    db = lancedb.connect(db_path)
+    if TABLE_NAME not in db.table_names():
+        return
+
+    table = db.open_table(TABLE_NAME)
+    rows = table.count_rows()
+    if rows < MIN_ROWS_FOR_INDEX:
+        logger.info(f"{rows} rows < {MIN_ROWS_FOR_INDEX}; skipping ANN index (brute force is fine)")
+        return
+
+    try:
+        table.create_index(metric="l2", replace=True)
+        logger.info(f"built ANN index over {rows} rows")
+    except Exception as exc:
+        logger.warning(f"ANN index build failed (queries still work via brute force): {exc}")
 
 
 def embed_and_store(

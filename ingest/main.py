@@ -4,7 +4,7 @@ from collections import Counter
 
 from chunker import chunk_text
 from dotenv import load_dotenv
-from embedder import embed_and_store, existing_item_ids
+from embedder import create_vector_index, embed_and_store, existing_item_ids
 from loguru import logger
 from parser import parse_document
 from tqdm import tqdm
@@ -97,6 +97,8 @@ def main() -> None:
         except Exception as exc:
             failed += 1
             logger.warning(f"item_id={item_id}: {exc}")
+
+    create_vector_index(db_path)
 
     elapsed = time.monotonic() - start
     logger.info(
