@@ -24,7 +24,7 @@ def build_user_prompt(query: str, results: list[dict]) -> str:
     System-level rules (role, citation format, language) live in SYSTEM_PROMPT.
     """
     chunk_blocks = [
-        f"[trecho {index}] {_format_citation(result)}\n{result['text']}"
+        f"[{index}] {_format_citation(result)}\n{result['text']}"
         for index, result in enumerate(results, start=1)
     ]
     return USER_TEMPLATE.format(chunks="\n\n".join(chunk_blocks), query=query)
