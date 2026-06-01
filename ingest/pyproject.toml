@@ -10,6 +10,7 @@ dependencies = [
     "lancedb",
     "pylance",
     "httpx",
+    "pydantic-settings",
     "tenacity",
     "tqdm",
 ]

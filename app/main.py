@@ -1,21 +1,11 @@
-import os
-
 import chainlit as cl
 import lancedb
 import polars as pl
-from dotenv import load_dotenv
+from config import get_settings
 from llm import stream_chat
 from loguru import logger
 from prompt import SYSTEM_PROMPT, build_user_prompt
 from search import search
-
-load_dotenv()
-
-LANCEDB_PATH = os.environ["LANCEDB_PATH"]
-OLLAMA_HOST = os.environ["OLLAMA_HOST"]
-EMBED_MODEL = os.environ["EMBED_MODEL"]
-TOP_K = int(os.environ.get("TOP_K", "15"))
-SCORE_THRESHOLD = float(os.environ.get("SCORE_THRESHOLD", "0.0"))
 
 
 @cl.on_chat_start
@@ -26,7 +16,7 @@ async def on_chat_start() -> None:
 def _index_summary() -> str:
     empty_message = "Index is empty. Run `ingest/main.py` first."
     try:
-        db = lancedb.connect(LANCEDB_PATH)
+        db = lancedb.connect(get_settings().lancedb_path)
         table = db.open_table("documents")
     except Exception:
         return empty_message
@@ -53,15 +43,16 @@ def _index_summary() -> str:
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
     query = message.content
+    settings = get_settings()
 
     try:
         results = search(
             query,
-            LANCEDB_PATH,
-            OLLAMA_HOST,
-            EMBED_MODEL,
-            top_k=TOP_K,
-            min_score=SCORE_THRESHOLD,
+            settings.lancedb_path,
+            settings.ollama_host,
+            settings.embed_model,
+            top_k=settings.top_k,
+            min_score=settings.score_threshold,
         )
     except Exception as exc:
         logger.exception("search failed")

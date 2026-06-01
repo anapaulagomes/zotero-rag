@@ -1,16 +1,13 @@
-import os
 import time
 from collections import Counter
 
 from chunker import chunk_text
-from dotenv import load_dotenv
+from config import get_settings
 from embedder import create_vector_index, embed_and_store, existing_item_ids
 from loguru import logger
 from parser import parse_document
 from tqdm import tqdm
 from zotero_reader import read_library
-
-load_dotenv()
 
 
 def _build_chunks(metadata: dict) -> tuple[list[str], str]:
@@ -60,9 +57,10 @@ def _route_loguru_through_tqdm() -> None:
 def main() -> None:
     _route_loguru_through_tqdm()
 
-    db_path = os.environ["LANCEDB_PATH"]
-    ollama_host = os.environ["OLLAMA_HOST"]
-    embed_model = os.environ["EMBED_MODEL"]
+    settings = get_settings()
+    db_path = settings.lancedb_path
+    ollama_host = settings.ollama_host
+    embed_model = settings.embed_model
 
     library = read_library()
     total_items = len(library)
