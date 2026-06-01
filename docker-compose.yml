@@ -30,10 +30,8 @@ services:
     environment:
       - LANCEDB_PATH=/data/lancedb
       - OLLAMA_HOST=http://host.docker.internal:11434
-      - RETRIEVAL_PATH=/retrieval
     volumes:
       - ./data/lancedb:/data/lancedb
-      - ./retrieval:/retrieval
     extra_hosts:
       - "host.docker.internal:host-gateway"
     profiles: [app]

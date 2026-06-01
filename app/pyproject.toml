@@ -11,7 +11,11 @@ dependencies = [
     "loguru",
     "polars",
     "tenacity",
+    "zotero-rag-retrieval",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+zotero-rag-retrieval = { workspace = true }

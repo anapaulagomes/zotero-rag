@@ -179,6 +179,9 @@ data/
 # Chainlit runtime artifacts (translations, caches) — only the project config is committed
 app/.chainlit/*
 !app/.chainlit/config.toml
+# Chainlit also writes these when run from the repo root
+.chainlit/
+chainlit.md
 
 # Parser smoke-test stderr capture etc
 *.log

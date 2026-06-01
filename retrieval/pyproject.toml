@@ -1,0 +1,19 @@
+[project]
+name = "zotero-rag-retrieval"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx",
+    "lancedb",
+    "litellm",
+    "python-dotenv",
+    "loguru",
+    "tenacity",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+include = ["search.py", "prompt.py", "llm.py"]

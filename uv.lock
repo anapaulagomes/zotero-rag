@@ -18,6 +18,7 @@ members = [
     "zotero-rag",
     "zotero-rag-app",
     "zotero-rag-ingest",
+    "zotero-rag-retrieval",
 ]
 
 [[package]]
@@ -4996,6 +4997,7 @@ dependencies = [
     { name = "polars" },
     { name = "python-dotenv" },
     { name = "tenacity" },
+    { name = "zotero-rag-retrieval" },
 ]
 
 [package.metadata]
@@ -5008,6 +5010,7 @@ requires-dist = [
     { name = "polars" },
     { name = "python-dotenv" },
     { name = "tenacity" },
+    { name = "zotero-rag-retrieval", editable = "retrieval" },
 ]
 
 [[package]]
@@ -5037,4 +5040,27 @@ requires-dist = [
     { name = "python-dotenv" },
     { name = "tenacity" },
     { name = "tqdm" },
+]
+
+[[package]]
+name = "zotero-rag-retrieval"
+version = "0.1.0"
+source = { editable = "retrieval" }
+dependencies = [
+    { name = "httpx" },
+    { name = "lancedb" },
+    { name = "litellm" },
+    { name = "loguru" },
+    { name = "python-dotenv" },
+    { name = "tenacity" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx" },
+    { name = "lancedb" },
+    { name = "litellm" },
+    { name = "loguru" },
+    { name = "python-dotenv" },
+    { name = "tenacity" },
 ]

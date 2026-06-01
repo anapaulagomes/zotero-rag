@@ -1,23 +1,15 @@
 import os
-import sys
-from pathlib import Path
 
 import chainlit as cl
 import lancedb
 import polars as pl
 from dotenv import load_dotenv
+from llm import stream_chat
 from loguru import logger
+from prompt import SYSTEM_PROMPT, build_user_prompt
+from search import search
 
 load_dotenv()
-
-_RETRIEVAL_DIR = os.environ.get("RETRIEVAL_PATH") or str(
-    Path(__file__).resolve().parent.parent / "retrieval"
-)
-sys.path.insert(0, _RETRIEVAL_DIR)
-
-from llm import stream_chat  # noqa: E402
-from prompt import SYSTEM_PROMPT, build_user_prompt  # noqa: E402
-from search import search  # noqa: E402
 
 LANCEDB_PATH = os.environ["LANCEDB_PATH"]
 OLLAMA_HOST = os.environ["OLLAMA_HOST"]
