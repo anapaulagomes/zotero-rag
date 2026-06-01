@@ -24,7 +24,7 @@ ingest/                  # workspace member
 ├── embedder.py          # Ollama embed → LanceDB (idempotent per item_id)
 └── main.py              # orchestrator: cascade pdf → abstract → title
 
-retrieval/               # shared library (mounted into app)
+retrieval/               # workspace package (installed as a dependency of app)
 ├── search.py            # query → embed → LanceDB top-k + metadata
 └── prompt.py            # LLM prompt template + inline citations
 
@@ -93,7 +93,10 @@ All knobs in `.env`:
 | `LANCEDB_PATH` | `./data/lancedb` | vector store on disk |
 | `OLLAMA_HOST` | `http://localhost:11434` | replaced inside Docker |
 | `EMBED_MODEL` | `nomic-embed-text` | 768-dim, matches schema |
+| `LLM_PROVIDER` | `ollama` | `ollama` \| `claude` \| `openai` |
 | `LLM_MODEL` | `qwen2.5:7b-instruct` | swap freely, response quality varies |
+| `TOP_K` | `15` | chunks retrieved per query |
+| `SCORE_THRESHOLD` | `0.0` | drop chunks below this normalized score; `0.0` keeps all |
 | `HF_TOKEN` | _(unset)_ | optional: avoids the "unauthenticated requests" warning + throttling when docling pulls models on first ingestion |
 
 ## Notes & limitations
@@ -128,4 +131,12 @@ uv run python retrieval/search.py "what is syndromic surveillance"
 
 # Inspect the prompt template
 uv run python retrieval/prompt.py
+```
+
+## Tests
+
+Unit tests cover the pure logic (chunking, year/PDF-path parsing, citation formatting):
+
+```bash
+uv run pytest
 ```
