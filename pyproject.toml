@@ -13,7 +13,14 @@ members = ["ingest", "app", "retrieval"]
 dev = [
     "ruff>=0.6.0",
     "pre-commit>=3.7.0",
+    "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# ingest modules are flat (not an installed package); retrieval is installed via the
+# workspace, so its modules import directly.
+pythonpath = ["ingest"]
 
 [tool.ruff]
 line-length = 100
