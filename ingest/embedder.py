@@ -1,35 +1,61 @@
-import httpx
 import lancedb
+from embed import embed_documents, embedding_dim
 from lancedb.pydantic import LanceModel, Vector
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-EMBED_DIM = 768
 TABLE_NAME = "documents"
 
 # Below this row count, LanceDB's IVF_PQ index can't train a meaningful codebook and
 # brute-force KNN is fast enough anyway, so we skip building an index.
 MIN_ROWS_FOR_INDEX = 256
 
-# nomic-embed-text is trained with task prefixes; stored passages use "search_document:"
-# and queries use "search_query:". Omitting them puts queries and documents in slightly
-# different subspaces and measurably hurts retrieval.
-DOCUMENT_PREFIX = "search_document: "
+
+def _document_model() -> type[LanceModel]:
+    """Build the documents schema with the configured embedding dimension.
+
+    The vector width is fixed when the LanceDB table is created, so it can't be a module
+    constant — it follows EMBED_DIM (owned by the embeddings package). Switching embedding
+    model means a different dimension and a full re-ingest into a fresh table.
+    """
+    dim = embedding_dim()
+
+    class Document(LanceModel):
+        chunk_id: str
+        item_id: int
+        item_type: str
+        title: str
+        author: str
+        year: int | None
+        journal: str | None
+        doi: str | None
+        url: str | None
+        pdf_path: str | None
+        text: str
+        vector: Vector(dim)
+
+    return Document
 
 
-class Document(LanceModel):
-    chunk_id: str
-    item_id: int
-    item_type: str
-    title: str
-    author: str
-    year: int | None
-    journal: str | None
-    doi: str | None
-    url: str | None
-    pdf_path: str | None
-    text: str
-    vector: Vector(EMBED_DIM)
+def ensure_table_dim(db_path: str) -> None:
+    """Abort the run if the existing table was built with a different vector width.
+
+    Without this check, switching EMBED_MODEL against an existing table fails one item at
+    a time ("Provided schema does not match existing table schema") after each PDF has
+    already been parsed, while already-ingested items keep their old-model vectors — a
+    silently mixed, unusable index. Called by the orchestrator before any parsing starts.
+    """
+    db = lancedb.connect(db_path)
+    if TABLE_NAME not in db.table_names():
+        return
+    table_dim = db.open_table(TABLE_NAME).schema.field("vector").type.list_size
+    expected = embedding_dim()
+    if table_dim != expected:
+        raise SystemExit(
+            f"Existing table at {db_path!r} holds {table_dim}-dim vectors, but the configured "
+            f"embedding model needs EMBED_DIM={expected}. Switching embedding model requires a "
+            "fresh table: point LANCEDB_PATH at a new directory (keeps the old index around) "
+            "or delete the current one, then re-run the ingestion."
+        )
 
 
 def existing_item_ids(db_path: str) -> set[int]:
@@ -70,32 +96,28 @@ def create_vector_index(db_path: str) -> None:
         logger.warning(f"ANN index build failed (queries still work via brute force): {exc}")
 
 
-def embed_and_store(
-    chunks: list[str],
-    metadata: dict,
-    db_path: str,
-    ollama_host: str,
-    embed_model: str,
-) -> int:
-    """Embed chunks via Ollama and insert them into the documents table.
+def embed_and_store(chunks: list[str], metadata: dict, db_path: str) -> int:
+    """Embed chunks via the configured provider and insert them into the documents table.
 
     Idempotent: returns 0 without re-embedding if `metadata["item_id"]` already exists.
     """
     if not chunks:
         return 0
 
+    document_model = _document_model()
+
     db = lancedb.connect(db_path)
-    table = db.create_table(TABLE_NAME, schema=Document, exist_ok=True)
+    table = db.create_table(TABLE_NAME, schema=document_model, exist_ok=True)
 
     item_id = int(metadata["item_id"])
     if table.count_rows(filter=f"item_id = {item_id}") > 0:
         logger.debug(f"item_id {item_id} already embedded; skipping")
         return 0
 
-    embeddings = _embed_batch(chunks, ollama_host, embed_model)
+    embeddings = embed_documents(chunks)
 
     records = [
-        Document(
+        document_model(
             chunk_id=f"{item_id}_{index}",
             item_id=item_id,
             item_type=metadata["item_type"],
@@ -114,22 +136,3 @@ def embed_and_store(
 
     table.add(records)
     return len(records)
-
-
-# Retry only transient transport errors (connection refused, timeouts): a bad model
-# name or malformed request raises HTTPStatusError and should fail fast instead.
-@retry(
-    retry=retry_if_exception_type(httpx.TransportError),
-    stop=stop_after_attempt(4),
-    wait=wait_exponential(multiplier=1, max=30),
-    reraise=True,
-)
-def _embed_batch(chunks: list[str], ollama_host: str, embed_model: str) -> list[list[float]]:
-    inputs = [f"{DOCUMENT_PREFIX}{chunk}" for chunk in chunks]
-    response = httpx.post(
-        f"{ollama_host}/api/embed",
-        json={"model": embed_model, "input": inputs},
-        timeout=120.0,
-    )
-    response.raise_for_status()
-    return response.json()["embeddings"]

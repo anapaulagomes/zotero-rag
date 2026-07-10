@@ -3,7 +3,7 @@ from collections import Counter
 
 from chunker import chunk_text
 from config import get_settings
-from embedder import create_vector_index, embed_and_store, existing_item_ids
+from embedder import create_vector_index, embed_and_store, ensure_table_dim, existing_item_ids
 from loguru import logger
 from parser import parse_document
 from tqdm import tqdm
@@ -59,8 +59,8 @@ def main() -> None:
 
     settings = get_settings()
     db_path = settings.lancedb_path
-    ollama_host = settings.ollama_host
-    embed_model = settings.embed_model
+
+    ensure_table_dim(db_path)
 
     library = read_library()
     total_items = len(library)
@@ -84,13 +84,7 @@ def main() -> None:
             sources[source] += 1
             if not chunks:
                 continue
-            inserted = embed_and_store(
-                chunks=chunks,
-                metadata=row,
-                db_path=db_path,
-                ollama_host=ollama_host,
-                embed_model=embed_model,
-            )
+            inserted = embed_and_store(chunks=chunks, metadata=row, db_path=db_path)
             total_inserted += inserted
         except Exception as exc:
             failed += 1
