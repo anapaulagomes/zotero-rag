@@ -9,11 +9,13 @@ dependencies = [
     "docling",
     "lancedb",
     "pylance",
-    "httpx",
     "pydantic-settings",
-    "tenacity",
     "tqdm",
+    "zotero-rag-embeddings",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+zotero-rag-embeddings = { workspace = true }

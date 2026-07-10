@@ -17,6 +17,7 @@ resolution-markers = [
 members = [
     "zotero-rag",
     "zotero-rag-app",
+    "zotero-rag-embeddings",
     "zotero-rag-ingest",
     "zotero-rag-retrieval",
 ]
@@ -5043,34 +5044,49 @@ requires-dist = [
 ]
 
 [[package]]
+name = "zotero-rag-embeddings"
+version = "0.1.0"
+source = { editable = "embeddings" }
+dependencies = [
+    { name = "litellm" },
+    { name = "python-dotenv" },
+    { name = "tenacity" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "litellm" },
+    { name = "python-dotenv" },
+    { name = "tenacity" },
+]
+
+[[package]]
 name = "zotero-rag-ingest"
 version = "0.1.0"
 source = { virtual = "ingest" }
 dependencies = [
     { name = "docling" },
-    { name = "httpx" },
     { name = "lancedb" },
     { name = "loguru" },
     { name = "polars" },
     { name = "pydantic-settings" },
     { name = "pylance" },
     { name = "python-dotenv" },
-    { name = "tenacity" },
     { name = "tqdm" },
+    { name = "zotero-rag-embeddings" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "docling" },
-    { name = "httpx" },
     { name = "lancedb" },
     { name = "loguru" },
     { name = "polars" },
     { name = "pydantic-settings" },
     { name = "pylance" },
     { name = "python-dotenv" },
-    { name = "tenacity" },
     { name = "tqdm" },
+    { name = "zotero-rag-embeddings", editable = "embeddings" },
 ]
 
 [[package]]
@@ -5078,20 +5094,18 @@ name = "zotero-rag-retrieval"
 version = "0.1.0"
 source = { editable = "retrieval" }
 dependencies = [
-    { name = "httpx" },
     { name = "lancedb" },
     { name = "litellm" },
     { name = "loguru" },
     { name = "python-dotenv" },
-    { name = "tenacity" },
+    { name = "zotero-rag-embeddings" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx" },
     { name = "lancedb" },
     { name = "litellm" },
     { name = "loguru" },
     { name = "python-dotenv" },
-    { name = "tenacity" },
+    { name = "zotero-rag-embeddings", editable = "embeddings" },
 ]

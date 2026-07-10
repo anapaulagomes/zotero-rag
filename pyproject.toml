@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 package = false
 
 [tool.uv.workspace]
-members = ["ingest", "app", "retrieval"]
+members = ["ingest", "app", "retrieval", "embeddings"]
 
 [dependency-groups]
 dev = [
