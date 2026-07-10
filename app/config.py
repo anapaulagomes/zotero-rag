@@ -15,8 +15,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
     lancedb_path: str
-    ollama_host: str
-    embed_model: str
     top_k: int = 15
     score_threshold: float = 0.0
 

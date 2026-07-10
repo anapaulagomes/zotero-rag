@@ -49,8 +49,6 @@ async def on_message(message: cl.Message) -> None:
         results = search(
             query,
             settings.lancedb_path,
-            settings.ollama_host,
-            settings.embed_model,
             top_k=settings.top_k,
             min_score=settings.score_threshold,
         )
