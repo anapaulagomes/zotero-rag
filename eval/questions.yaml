@@ -1,187 +1,418 @@
 # Golden set for retrieval evaluation.
 #
+# Papers are referenced by INTRINSIC identifier — a DOI when the paper has one,
+# otherwise its exact title — never by the local Zotero item_id (an opaque integer
+# that means nothing outside this library and can churn on a rebuild). The runner
+# matches a retrieved chunk as relevant if its normalized DOI or title equals a
+# `relevant` entry. Each entry carries the paper title as a trailing comment so the
+# file stays auditable by eye.
+#
 # Each CONCEPT (c01..c23) is asked in BOTH pt-br and en with the SAME `relevant`
-# item_ids. This makes the pt-vs-en gap a clean measurement of the cross-lingual
-# ability of the embedding model — same semantic query, two languages — instead of
-# confounding it with "the Portuguese questions happened to be harder".
-#
-# The runner embeds each question with the currently-configured model, runs
-# search() against LANCEDB_PATH, and scores whether ANY relevant item appears in
-# the top-k, reporting recall@k and MRR per language and overall. No LLM involved:
-# this measures retrieval only, which is what decides one embedding model vs another.
-#
-# `relevant` = item_ids that count as a correct hit (any-of). Curated by inspecting
-# what bge-m3 actually returns and keeping the papers that genuinely answer the
-# question. `note` is a human reminder, ignored by the runner.
+# list, so the pt-vs-en gap cleanly measures the model's cross-lingual ability.
+# No LLM is involved: this scores retrieval only (recall@k + MRR), which is what
+# decides one embedding model vs another.
 
 questions:
-  # c01 — value and evaluation of syndromic surveillance
-  - {id: c01_pt, lang: pt, concept: c01, relevant: [182, 4177],
-     question: "Qual o valor da vigilância sindrômica para a saúde pública e como seu desempenho é avaliado?"}
-  - {id: c01_en, lang: en, concept: c01, relevant: [182, 4177],
-     question: "What is the value of syndromic surveillance for public health and how is its performance evaluated?"}
-  # note: Syndromic Surveillance - Made in Europe (182); Meeting the IHR (2005) core capacity (4177)
 
-  # c02 — syndromic surveillance in Europe
-  - {id: c02_pt, lang: pt, concept: c02, relevant: [148, 182, 183],
-     question: "Sistemas de vigilância sindrômica na Europa"}
-  - {id: c02_en, lang: en, concept: c02, relevant: [148, 182, 183],
-     question: "Syndromic surveillance systems in Europe"}
-  # note: TRIPLE-S (148); Made in Europe (182); Success Factors of European SS Systems (183)
+  # c01
+  - id: c01_pt
+    lang: pt
+    concept: c01
+    question: "Qual o valor da vigilância sindrômica para a saúde pública e como seu desempenho é avaliado?"
+    relevant:
+      - "Syndromic Surveillance - Made in Europe"  # (no DOI — title match)
+      - "10.1186/s12889-015-1421-2"  # Meeting the International Health Regulations (2005) surveillance core capacity requirements at the subnational level in Europe: the added value of syndromic surveillance (2015)
 
-  # c03 — ICD codes in syndromic surveillance
-  - {id: c03_pt, lang: pt, concept: c03, relevant: [153, 542, 144],
-     question: "Como os códigos da CID (ICD) são usados em sistemas de vigilância sindrômica?"}
-  - {id: c03_en, lang: en, concept: c03, relevant: [153, 542, 144],
-     question: "How are ICD codes used in syndromic surveillance systems?"}
-  # note: Accuracy of syndromic classification of coded ED diagnoses (153); Chief Complaints
-  #       and ICD Codes (542); Classifying ED Data to Improve Syndromic Surveillance (144)
+  - id: c01_en
+    lang: en
+    concept: c01
+    question: "What is the value of syndromic surveillance for public health and how is its performance evaluated?"
+    relevant:
+      - "Syndromic Surveillance - Made in Europe"  # (no DOI — title match)
+      - "10.1186/s12889-015-1421-2"  # Meeting the International Health Regulations (2005) surveillance core capacity requirements at the subnational level in Europe: the added value of syndromic surveillance (2015)
 
-  # c04 — free-text in syndromic surveillance
-  - {id: c04_pt, lang: pt, concept: c04, relevant: [2253, 24, 491],
-     question: "Uso de texto livre, como queixas de triagem, em sistemas de vigilância sindrômica"}
-  - {id: c04_en, lang: en, concept: c04, relevant: [2253, 24, 491],
-     question: "Use of free-text, such as triage chief complaints, in syndromic surveillance systems"}
-  # note: SS from free-text triage chief complaints (2253); classifying free-text into
-  #       syndromic categories (24); free-text chief complaints outbreaks (491)
+  # c02
+  - id: c02_pt
+    lang: pt
+    concept: c02
+    question: "Sistemas de vigilância sindrômica na Europa"
+    relevant:
+      - "TRIPLE S: Syndromic Surveillance Systems in Europe"  # (no DOI — title match)
+      - "Syndromic Surveillance - Made in Europe"  # (no DOI — title match)
+      - "10.1371/journal.pone.0155535"  # Success Factors of European Syndromic Surveillance Systems: A Worked Example of Applying Qualitative Comparative Analysis (2016)
 
-  # c05 — data sources used in syndromic surveillance
-  - {id: c05_pt, lang: pt, concept: c05, relevant: [196, 4182, 406, 4260, 591, 498],
-     question: "Quais fontes de dados são usadas em vigilância sindrômica (medicamentos de balcão, redes sociais, etc.)?"}
-  - {id: c05_en, lang: en, concept: c05, relevant: [196, 4182, 406, 4260, 591, 498],
-     question: "What data sources are used in syndromic surveillance (over-the-counter sales, social media, etc.)?"}
-  # note: SS Data Sources and Collection Strategies (196); Review on Different Practices (4182);
-  #       Infectious Disease Informatics and SS (406); OTC-based sources (4260, 591, 498)
+  - id: c02_en
+    lang: en
+    concept: c02
+    question: "Syndromic surveillance systems in Europe"
+    relevant:
+      - "TRIPLE S: Syndromic Surveillance Systems in Europe"  # (no DOI — title match)
+      - "Syndromic Surveillance - Made in Europe"  # (no DOI — title match)
+      - "10.1371/journal.pone.0155535"  # Success Factors of European Syndromic Surveillance Systems: A Worked Example of Applying Qualitative Comparative Analysis (2016)
 
-  # c06 — real-time syndromic surveillance to detect outbreaks
-  - {id: c06_pt, lang: pt, concept: c06, relevant: [4286],
-     question: "Vigilância sindrômica em tempo real para detectar surtos em um ambiente de cuidado agudo"}
-  - {id: c06_en, lang: en, concept: c06, relevant: [4286],
-     question: "Real-time syndromic surveillance to detect outbreaks in an acute-care setting"}
-  # note: Gillen — Seeing the Outbreak Before It Happens (4286)
+  # c03
+  - id: c03_pt
+    lang: pt
+    concept: c03
+    question: "Como os códigos da CID (ICD) são usados em sistemas de vigilância sindrômica?"
+    relevant:
+      - "10.1186/1472-6947-14-84"  # Accuracy of automatic syndromic classification of coded emergency department diagnoses in identifying mental health-related presentations for public health surveillance (2014)
+      - "10.1016/B978-012369378-5/50025-9"  # Chief Complaints and ICD Codes (2006)
+      - "Classifying Emergency Department Data to Improve Syndromic Surveillance: From Mixed Data Types to ICD Codes and Syndromes"  # (no DOI — title match)
 
-  # c07 — syndrome discovery
-  - {id: c07_pt, lang: pt, concept: c07, relevant: [4066, 64, 263],
-     question: "Descoberta de síndromes (syndrome discovery) a partir de padrões de doença"}
-  - {id: c07_en, lang: en, concept: c07, relevant: [4066, 64, 263],
-     question: "Syndrome discovery from disease patterns"}
-  # note: Advocating AI for Syndrome Discovery (4066); Correlation-Based Discovery (64);
-  #       Cognitive Approach to Data Mining for Syndrome Discovery, dermatology (263)
+  - id: c03_en
+    lang: en
+    concept: c03
+    question: "How are ICD codes used in syndromic surveillance systems?"
+    relevant:
+      - "10.1186/1472-6947-14-84"  # Accuracy of automatic syndromic classification of coded emergency department diagnoses in identifying mental health-related presentations for public health surveillance (2014)
+      - "10.1016/B978-012369378-5/50025-9"  # Chief Complaints and ICD Codes (2006)
+      - "Classifying Emergency Department Data to Improve Syndromic Surveillance: From Mixed Data Types to ICD Codes and Syndromes"  # (no DOI — title match)
 
-  # c08 — digital syndromic surveillance data on arboviruses in Brazil
-  - {id: c08_pt, lang: pt, concept: c08, relevant: [4015],
-     question: "Dados de vigilância sindrômica digital de dengue, chikungunya e SRAG no Brasil"}
-  - {id: c08_en, lang: en, concept: c08, relevant: [4015],
-     question: "Digital syndromic surveillance data on dengue, chikungunya and SARI in Brazil"}
-  # note: Borges — digital syndromic surveillance data dengue/chik/SARI in Brazil (4015)
+  # c04
+  - id: c04_pt
+    lang: pt
+    concept: c04
+    question: "Uso de texto livre, como queixas de triagem, em sistemas de vigilância sindrômica"
+    relevant:
+      - "https://doi.org/10.1007/bf02416903"  # Syndromic surveillance from free-text triage chief complaints (2003)
+      - "10.1016/j.artmed.2004.04.001"  # Classifying free-text triage chief complaints into syndromic categories with natural language processing (2005)
+      - "Detection of Pediatric Respiratory and Gastrointestinal Outbreaks from Free-Text Chief Complaints"  # (no DOI — title match)
 
-  # c09 — deep learning with web data for outbreak surveillance and forecasting
-  - {id: c09_pt, lang: pt, concept: c09, relevant: [4025, 2900],
-     question: "Aprendizado profundo com dados da web para vigilância e previsão de surtos em tempo real"}
-  - {id: c09_en, lang: en, concept: c09, relevant: [4025, 2900],
-     question: "Deep learning with web-based data for real-time outbreak surveillance and forecasting"}
-  # note: Movahedi Nia — deep-learning + web data for surveillance/forecasting (4025, 2900)
+  - id: c04_en
+    lang: en
+    concept: c04
+    question: "Use of free-text, such as triage chief complaints, in syndromic surveillance systems"
+    relevant:
+      - "https://doi.org/10.1007/bf02416903"  # Syndromic surveillance from free-text triage chief complaints (2003)
+      - "10.1016/j.artmed.2004.04.001"  # Classifying free-text triage chief complaints into syndromic categories with natural language processing (2005)
+      - "Detection of Pediatric Respiratory and Gastrointestinal Outbreaks from Free-Text Chief Complaints"  # (no DOI — title match)
 
-  # c10 — holistic pandemic forecasting review
-  - {id: c10_pt, lang: pt, concept: c10, relevant: [3422],
-     question: "Revisão de patógenos, modelos e dados para previsão holística de pandemias"}
-  - {id: c10_en, lang: en, concept: c10, relevant: [3422],
-     question: "A review of pathogens, models, and data for holistic pandemic forecasting"}
-  # note: Gomez — holistic forecasting for future pandemics (3422)
+  # c05
+  - id: c05_pt
+    lang: pt
+    concept: c05
+    question: "Quais fontes de dados são usadas em vigilância sindrômica (medicamentos de balcão, redes sociais, etc.)?"
+    relevant:
+      - "10.1007/978-1-4419-1278-7_3"  # Syndromic Surveillance Data Sources and Collection Strategies (2009)
+      - "10.20944/preprints202512.2139.v1"  # Syndromic Surveillance – Review on Different Practices Performance, and Added Value for Public Health (2025)
+      - "10.1007/978-0-387-71611-4_26"  # Infectious Disease Informatics and Syndromic Surveillance (2008)
+      - "10.1038/s44482-026-00014-w"  # Anticipating influenza-like illness outbreaks via syndromic surveillance using over-the-counter drug sales and primary health care data (2026)
+      - "10.1016/j.is.2014.05.008"  # An analytics appliance for identifying (near) optimal over-the-counter medicine products as health indicators for influenza surveillance (2015)
+      - "10.1197/JAMIA.M1377"  # Research Paper: Detection of Pediatric Respiratory and Diarrheal Outbreaks from Sales of Over-the-counter Electrolyte Products (2003)
 
-  # c11 — machine learning for severe dengue in the elderly
-  - {id: c11_pt, lang: pt, concept: c11, relevant: [276],
-     question: "Machine learning para identificar casos graves de dengue em idosos"}
-  - {id: c11_en, lang: en, concept: c11, relevant: [276],
-     question: "Machine learning to identify severe dengue cases in the elderly"}
-  # note: Ho — ML severe dengue elderly (276)
+  - id: c05_en
+    lang: en
+    concept: c05
+    question: "What data sources are used in syndromic surveillance (over-the-counter sales, social media, etc.)?"
+    relevant:
+      - "10.1007/978-1-4419-1278-7_3"  # Syndromic Surveillance Data Sources and Collection Strategies (2009)
+      - "10.20944/preprints202512.2139.v1"  # Syndromic Surveillance – Review on Different Practices Performance, and Added Value for Public Health (2025)
+      - "10.1007/978-0-387-71611-4_26"  # Infectious Disease Informatics and Syndromic Surveillance (2008)
+      - "10.1038/s44482-026-00014-w"  # Anticipating influenza-like illness outbreaks via syndromic surveillance using over-the-counter drug sales and primary health care data (2026)
+      - "10.1016/j.is.2014.05.008"  # An analytics appliance for identifying (near) optimal over-the-counter medicine products as health indicators for influenza surveillance (2015)
+      - "10.1197/JAMIA.M1377"  # Research Paper: Detection of Pediatric Respiratory and Diarrheal Outbreaks from Sales of Over-the-counter Electrolyte Products (2003)
 
-  # c12 — thrombocytopenia in dengue
-  - {id: c12_pt, lang: pt, concept: c12, relevant: [4221],
-     question: "Mecanismos da trombocitopenia na infecção por dengue"}
-  - {id: c12_en, lang: en, concept: c12, relevant: [4221],
-     question: "Mechanisms of thrombocytopenia in dengue infection"}
-  # note: Khazali — thrombocytopenia in dengue (4221)
+  # c06
+  - id: c06_pt
+    lang: pt
+    concept: c06
+    question: "Vigilância sindrômica em tempo real para detectar surtos em um ambiente de cuidado agudo"
+    relevant:
+      - "10.1016/j.ajic.2026.02.021"  # Seeing the Outbreak Before It Happens: Real-Time Syndromic Surveillance in an Acute-Care Setting (2026)
 
-  # c13 — examples of AI usage in epidemiology
-  - {id: c13_pt, lang: pt, concept: c13, relevant: [3695, 3950, 2945, 2796, 2820, 160],
-     question: "Há exemplos de uso de inteligência artificial em epidemiologia?"}
-  - {id: c13_en, lang: en, concept: c13, relevant: [3695, 3950, 2945, 2796, 2820, 160],
-     question: "Are there examples of artificial intelligence usage in epidemiology?"}
-  # note: life-course epidemiology (3695); AI friend or foe (3950); AI epidemic early warning
-  #       (2945); AI for modelling epidemics (2796); AI tackling epidemics (2820); AI-enabled
-  #       public health surveillance (160). Broad-recall — any counts as a hit.
+  - id: c06_en
+    lang: en
+    concept: c06
+    question: "Real-time syndromic surveillance to detect outbreaks in an acute-care setting"
+    relevant:
+      - "10.1016/j.ajic.2026.02.021"  # Seeing the Outbreak Before It Happens: Real-Time Syndromic Surveillance in an Acute-Care Setting (2026)
 
-  # c14 — agentic AI for rare disease diagnosis
-  - {id: c14_pt, lang: pt, concept: c14, relevant: [3999],
-     question: "Sistemas agênticos de IA para diagnóstico de doenças raras com raciocínio rastreável"}
-  - {id: c14_en, lang: en, concept: c14, relevant: [3999],
-     question: "Agentic AI systems for rare disease diagnosis with traceable reasoning"}
-  # note: Zhao — agentic system for rare disease diagnosis (3999)
+  # c07
+  - id: c07_pt
+    lang: pt
+    concept: c07
+    question: "Descoberta de síndromes (syndrome discovery) a partir de padrões de doença"
+    relevant:
+      - "10.1016/j.isci.2026.115103"  # Advocating the Potential of Artificial Intelligence for Syndrome Discovery in Syndromic Surveillance Systems: a Scoping Review (2026)
+      - "https://doi.org/10.3389/fdata.2021.784159"  # Correlation-Based Discovery of Disease Patterns for Syndromic Surveillance (2022)
+      - "10.4018/jssci.2012010101"  # A Cognitive Approach to Scientific Data Mining for Syndrome Discovery: A Case-Study in Dermatology (2012)
 
-  # c15 — regulatory barriers to AI agents in healthcare
-  - {id: c15_pt, lang: pt, concept: c15, relevant: [3504],
-     question: "Quais são as barreiras regulatórias para a adoção de agentes de IA na saúde?"}
-  - {id: c15_en, lang: en, concept: c15, relevant: [3504],
-     question: "What are the regulatory barriers to adopting AI agents in healthcare?"}
-  # note: Freyer — regulatory barriers to AI agents in healthcare (3504)
+  - id: c07_en
+    lang: en
+    concept: c07
+    question: "Syndrome discovery from disease patterns"
+    relevant:
+      - "10.1016/j.isci.2026.115103"  # Advocating the Potential of Artificial Intelligence for Syndrome Discovery in Syndromic Surveillance Systems: a Scoping Review (2026)
+      - "https://doi.org/10.3389/fdata.2021.784159"  # Correlation-Based Discovery of Disease Patterns for Syndromic Surveillance (2022)
+      - "10.4018/jssci.2012010101"  # A Cognitive Approach to Scientific Data Mining for Syndrome Discovery: A Case-Study in Dermatology (2012)
 
-  # c16 — AI in Brazilian public health
-  - {id: c16_pt, lang: pt, concept: c16, relevant: [4010],
-     question: "Como é o uso de inteligência artificial na saúde pública brasileira?"}
-  - {id: c16_en, lang: en, concept: c16, relevant: [4010],
-     question: "How is artificial intelligence used in Brazilian public health?"}
-  # note: Borges — LLM-assisted scoping review, Brazilian public health (4010)
+  # c08
+  - id: c08_pt
+    lang: pt
+    concept: c08
+    question: "Dados de vigilância sindrômica digital de dengue, chikungunya e SRAG no Brasil"
+    relevant:
+      - "10.1038/s41597-025-06155-6"  # Epidemiological and digital syndromic surveillance data on dengue, chikungunya, and SARI in Brazil (2026)
 
-  # c17 — decolonial AI
-  - {id: c17_pt, lang: pt, concept: c17, relevant: [2699],
-     question: "Teoria decolonial como prospecção sociotécnica para a inteligência artificial"}
-  - {id: c17_en, lang: en, concept: c17, relevant: [2699],
-     question: "Decolonial theory as sociotechnical foresight for artificial intelligence"}
-  # note: Mohamed — Decolonial AI (2699)
+  - id: c08_en
+    lang: en
+    concept: c08
+    question: "Digital syndromic surveillance data on dengue, chikungunya and SARI in Brazil"
+    relevant:
+      - "10.1038/s41597-025-06155-6"  # Epidemiological and digital syndromic surveillance data on dengue, chikungunya, and SARI in Brazil (2026)
 
-  # c18 — embeddings / BERT for ICD codes
-  - {id: c18_pt, lang: pt, concept: c18, relevant: [3663, 2749, 2865],
-     question: "Uso de embeddings e BERT para representar códigos CID a partir de dados de prontuário"}
-  - {id: c18_en, lang: en, concept: c18, relevant: [3663, 2749, 2865],
-     question: "Using embeddings and BERT to represent ICD codes from EMR data"}
-  # note: BERT ICD (3663); embedding ICD-10-CM (2749); clinical vocab embeddings (2865)
+  # c09
+  - id: c09_pt
+    lang: pt
+    concept: c09
+    question: "Aprendizado profundo com dados da web para vigilância e previsão de surtos em tempo real"
+    relevant:
+      - "10.1098/rsif.2025.0578"  # Integrating deep-learning methods and web-based data sources for surveillance, forecasting and early warning of avian influenza (2026)
+      - "10.1016/j.artmed.2025.103076"  # Leveraging deep-learning and unconventional data for real-time surveillance, forecasting, and early warning of respiratory pathogens outbreak (2025)
 
-  # c19 — ICD crosswalks
-  - {id: c19_pt, lang: pt, concept: c19, relevant: [3078, 2921, 3571],
-     question: "Exemplos de crosswalks para traduzir entre versões da CID (ICD)"}
-  - {id: c19_en, lang: en, concept: c19, relevant: [3078, 2921, 3571],
-     question: "Examples of crosswalks for translating between ICD versions"}
-  # note: Validating crosswalks ICD-9 to ICD-10 (3078); Mapping three versions of ICD (2921);
-  #       Comparison of ICD-9-CM to ICD-10-CM crosswalks (3571)
+  - id: c09_en
+    lang: en
+    concept: c09
+    question: "Deep learning with web-based data for real-time outbreak surveillance and forecasting"
+    relevant:
+      - "10.1098/rsif.2025.0578"  # Integrating deep-learning methods and web-based data sources for surveillance, forecasting and early warning of avian influenza (2026)
+      - "10.1016/j.artmed.2025.103076"  # Leveraging deep-learning and unconventional data for real-time surveillance, forecasting, and early warning of respiratory pathogens outbreak (2025)
 
-  # c20 — deep clustering methods
-  - {id: c20_pt, lang: pt, concept: c20, relevant: [3645, 3722],
-     question: "Métodos de deep clustering para dados de saúde e séries temporais"}
-  - {id: c20_en, lang: en, concept: c20, relevant: [3645, 3722],
-     question: "Deep clustering methods for health and time-series data"}
-  # note: Deep embedded clustering for mixed datatypes (3645); Deep Temporal Clustering (3722).
-  #       "Unsupervised Deep Embedding for Clustering Analysis" is not in the library.
+  # c10
+  - id: c10_pt
+    lang: pt
+    concept: c10
+    question: "Revisão de patógenos, modelos e dados para previsão holística de pandemias"
+    relevant:
+      - "10.1186/s12982-025-00573-y"  # Holistic forecasting for future pandemics: a review of pathogens, models, and data (2025)
 
-  # c21 — federated learning applications
-  - {id: c21_pt, lang: pt, concept: c21, relevant: [4181, 2665, 2655],
-     question: "Aplicações de aprendizado federado para vigilância de doenças e dados de saúde"}
-  - {id: c21_en, lang: en, concept: c21, relevant: [4181, 2665, 2655],
-     question: "Applications of federated learning for disease surveillance and health data"}
-  # note: Federated Graph Learning for disease surveillance (4181); federated infection
-  #       surveillance (2665); Review of Medical Federated Learning applications (2655)
+  - id: c10_en
+    lang: en
+    concept: c10
+    question: "A review of pathogens, models, and data for holistic pandemic forecasting"
+    relevant:
+      - "10.1186/s12982-025-00573-y"  # Holistic forecasting for future pandemics: a review of pathogens, models, and data (2025)
 
-  # c22 — data equity in public health
-  - {id: c22_pt, lang: pt, concept: c22, relevant: [3947],
-     question: "Conceitos centrais para garantir equidade de dados em saúde pública"}
-  - {id: c22_en, lang: en, concept: c22, relevant: [3947],
-     question: "Core concepts for ensuring data equity in public health"}
-  # note: Wang — Ten Core Concepts for Data Equity (3947)
+  # c11
+  - id: c11_pt
+    lang: pt
+    concept: c11
+    question: "Machine learning para identificar casos graves de dengue em idosos"
+    relevant:
+      - "10.2139/ssrn.4736609"  # Using Machine Learning to Identify Severe Dengue Cases in the Elderly and Non-Elderly in Southern Taiwan: A Step Toward International Collaboration on Dengue Syndromic Surveillance (2024)
 
-  # c23 — femicide data in Brazil
-  - {id: c23_pt, lang: pt, concept: c23, relevant: [3769, 3778, 3770],
-     question: "Representação estatística e análise de dados de feminicídio no Brasil"}
-  - {id: c23_en, lang: en, concept: c23, relevant: [3769, 3778, 3770],
-     question: "Statistical representation and analysis of femicide data in Brazil"}
-  # note: Strategies for statistical representation of femicide data (3769); Mulheres
-  #       Assassinadas no Brasil (3778); LSTM risk patterns before femicides (3770)
+  - id: c11_en
+    lang: en
+    concept: c11
+    question: "Machine learning to identify severe dengue cases in the elderly"
+    relevant:
+      - "10.2139/ssrn.4736609"  # Using Machine Learning to Identify Severe Dengue Cases in the Elderly and Non-Elderly in Southern Taiwan: A Step Toward International Collaboration on Dengue Syndromic Surveillance (2024)
+
+  # c12
+  - id: c12_pt
+    lang: pt
+    concept: c12
+    question: "Mecanismos da trombocitopenia na infecção por dengue"
+    relevant:
+      - "10.1017/erm.2024.18"  # Thrombocytopenia in dengue infection: mechanisms and a potential application (2024)
+
+  - id: c12_en
+    lang: en
+    concept: c12
+    question: "Mechanisms of thrombocytopenia in dengue infection"
+    relevant:
+      - "10.1017/erm.2024.18"  # Thrombocytopenia in dengue infection: mechanisms and a potential application (2024)
+
+  # c13
+  - id: c13_pt
+    lang: pt
+    concept: c13
+    question: "Há exemplos de uso de inteligência artificial em epidemiologia?"
+    relevant:
+      - "10.1186/s12916-024-03566-x"  # Integrating machine learning and artificial intelligence in life-course epidemiology: pathways to innovative public health solutions (2024)
+      - "10.1016/j.annepidem.2026.01.003"  # is Artificial Intelligence a friend or foe to epidemiology? (2026)
+      - "10.1177/03000605231159335"  # Artificial intelligence in public health: the potential of epidemic early warning systems (2023)
+      - "10.1038/s41586-024-08564-w"  # Artificial intelligence for modelling infectious disease epidemics (2025)
+      - "10.60087/Japmi.Vol.03.Issue.01.Id.008"  # The Role of AI in Tackling Epidemics: Lessons from Recent Outbreaks (2024)
+      - "10.1016/B978-0-12-821259-2.00022-3"  # Artificial intelligence–enabled public health surveillance—from local detection to global epidemic monitoring and control (2021)
+
+  - id: c13_en
+    lang: en
+    concept: c13
+    question: "Are there examples of artificial intelligence usage in epidemiology?"
+    relevant:
+      - "10.1186/s12916-024-03566-x"  # Integrating machine learning and artificial intelligence in life-course epidemiology: pathways to innovative public health solutions (2024)
+      - "10.1016/j.annepidem.2026.01.003"  # is Artificial Intelligence a friend or foe to epidemiology? (2026)
+      - "10.1177/03000605231159335"  # Artificial intelligence in public health: the potential of epidemic early warning systems (2023)
+      - "10.1038/s41586-024-08564-w"  # Artificial intelligence for modelling infectious disease epidemics (2025)
+      - "10.60087/Japmi.Vol.03.Issue.01.Id.008"  # The Role of AI in Tackling Epidemics: Lessons from Recent Outbreaks (2024)
+      - "10.1016/B978-0-12-821259-2.00022-3"  # Artificial intelligence–enabled public health surveillance—from local detection to global epidemic monitoring and control (2021)
+
+  # c14
+  - id: c14_pt
+    lang: pt
+    concept: c14
+    question: "Sistemas agênticos de IA para diagnóstico de doenças raras com raciocínio rastreável"
+    relevant:
+      - "10.1038/s41586-025-10097-9"  # An agentic system for rare disease diagnosis with traceable reasoning (2026)
+
+  - id: c14_en
+    lang: en
+    concept: c14
+    question: "Agentic AI systems for rare disease diagnosis with traceable reasoning"
+    relevant:
+      - "10.1038/s41586-025-10097-9"  # An agentic system for rare disease diagnosis with traceable reasoning (2026)
+
+  # c15
+  - id: c15_pt
+    lang: pt
+    concept: c15
+    question: "Quais são as barreiras regulatórias para a adoção de agentes de IA na saúde?"
+    relevant:
+      - "10.1038/s41591-025-03841-1"  # Overcoming regulatory barriers to the implementation of AI agents in healthcare (2025)
+
+  - id: c15_en
+    lang: en
+    concept: c15
+    question: "What are the regulatory barriers to adopting AI agents in healthcare?"
+    relevant:
+      - "10.1038/s41591-025-03841-1"  # Overcoming regulatory barriers to the implementation of AI agents in healthcare (2025)
+
+  # c16
+  - id: c16_pt
+    lang: pt
+    concept: c16
+    question: "Como é o uso de inteligência artificial na saúde pública brasileira?"
+    relevant:
+      - "10.3390/ijerph23010081"  # LLM-Assisted Scoping Review of Artificial Intelligence in Brazilian Public Health: Lessons from Transfer and Federated Learning for Resource-Constrained Settings (2026)
+
+  - id: c16_en
+    lang: en
+    concept: c16
+    question: "How is artificial intelligence used in Brazilian public health?"
+    relevant:
+      - "10.3390/ijerph23010081"  # LLM-Assisted Scoping Review of Artificial Intelligence in Brazilian Public Health: Lessons from Transfer and Federated Learning for Resource-Constrained Settings (2026)
+
+  # c17
+  - id: c17_pt
+    lang: pt
+    concept: c17
+    question: "Teoria decolonial como prospecção sociotécnica para a inteligência artificial"
+    relevant:
+      - "10.1007/s13347-020-00405-8"  # Decolonial AI: Decolonial Theory as Sociotechnical Foresight in Artificial Intelligence (2020)
+
+  - id: c17_en
+    lang: en
+    concept: c17
+    question: "Decolonial theory as sociotechnical foresight for artificial intelligence"
+    relevant:
+      - "10.1007/s13347-020-00405-8"  # Decolonial AI: Decolonial Theory as Sociotechnical Foresight in Artificial Intelligence (2020)
+
+  # c18
+  - id: c18_pt
+    lang: pt
+    concept: c18
+    question: "Uso de embeddings e BERT para representar códigos CID a partir de dados de prontuário"
+    relevant:
+      - "10.1186/s12911-025-03145-x"  # Leveraging BERT for embedding ICD codes from large scale cardiovascular EMR data to understand patient diagnostic patterns (2025)
+      - "10.1101/2024.07.02.24309849"  # Enhancing Automated Medical Coding: Evaluating Embedding Models for ICD-10-CM Code Mapping (2024)
+      - "10.1101/2024.12.03.24318322"  # Unified Clinical Vocabulary Embeddings for Advancing Precision Medicine (2024)
+
+  - id: c18_en
+    lang: en
+    concept: c18
+    question: "Using embeddings and BERT to represent ICD codes from EMR data"
+    relevant:
+      - "10.1186/s12911-025-03145-x"  # Leveraging BERT for embedding ICD codes from large scale cardiovascular EMR data to understand patient diagnostic patterns (2025)
+      - "10.1101/2024.07.02.24309849"  # Enhancing Automated Medical Coding: Evaluating Embedding Models for ICD-10-CM Code Mapping (2024)
+      - "10.1101/2024.12.03.24318322"  # Unified Clinical Vocabulary Embeddings for Advancing Precision Medicine (2024)
+
+  # c19
+  - id: c19_pt
+    lang: pt
+    concept: c19
+    question: "Exemplos de crosswalks para traduzir entre versões da CID (ICD)"
+    relevant:
+      - "10.1161/CIRCOUTCOMES.118.004782"  # Validating Publicly Available Crosswalks For Translating ICD-9 to ICD-10 Diagnosis Codes For Cardiovascular Outcomes Research (2018)
+      - "10.23889/ijpds.v6i1.1406"  # Mapping three versions of the international classification of diseases to categories of chronic conditions (None)
+      - "Comparison of ICD-9-CM to ICD-10-CM Crosswalks Derived by Physician and Clinical Coder vs. Automated Methods"  # (no DOI — title match)
+
+  - id: c19_en
+    lang: en
+    concept: c19
+    question: "Examples of crosswalks for translating between ICD versions"
+    relevant:
+      - "10.1161/CIRCOUTCOMES.118.004782"  # Validating Publicly Available Crosswalks For Translating ICD-9 to ICD-10 Diagnosis Codes For Cardiovascular Outcomes Research (2018)
+      - "10.23889/ijpds.v6i1.1406"  # Mapping three versions of the international classification of diseases to categories of chronic conditions (None)
+      - "Comparison of ICD-9-CM to ICD-10-CM Crosswalks Derived by Physician and Clinical Coder vs. Automated Methods"  # (no DOI — title match)
+
+  # c20
+  - id: c20_pt
+    lang: pt
+    concept: c20
+    question: "Métodos de deep clustering para dados de saúde e séries temporais"
+    relevant:
+      - "10.1038/s41598-024-51699-z"  # Deep embedded clustering generalisability and adaptation for integrating mixed datatypes: two critical care cohorts (2024)
+      - "10.48550/arXiv.1802.01059"  # Deep Temporal Clustering : Fully Unsupervised Learning of Time-Domain Features (2018)
+
+  - id: c20_en
+    lang: en
+    concept: c20
+    question: "Deep clustering methods for health and time-series data"
+    relevant:
+      - "10.1038/s41598-024-51699-z"  # Deep embedded clustering generalisability and adaptation for integrating mixed datatypes: two critical care cohorts (2024)
+      - "10.48550/arXiv.1802.01059"  # Deep Temporal Clustering : Fully Unsupervised Learning of Time-Domain Features (2018)
+
+  # c21
+  - id: c21_pt
+    lang: pt
+    concept: c21
+    question: "Aplicações de aprendizado federado para vigilância de doenças e dados de saúde"
+    relevant:
+      - "10.54097/r1bpev97"  # Federated Graph Learning Enables Decentralized Disease Surveillance Across Health Systems (2026)
+      - "10.1186/s13756-024-01464-8"  # Federated systems for automated infection surveillance: a perspective (2024)
+      - "10.1007/978-3-031-08999-2_1"  # A Review of Medical Federated Learning: Applications in Oncology and Cancer Research (2022)
+
+  - id: c21_en
+    lang: en
+    concept: c21
+    question: "Applications of federated learning for disease surveillance and health data"
+    relevant:
+      - "10.54097/r1bpev97"  # Federated Graph Learning Enables Decentralized Disease Surveillance Across Health Systems (2026)
+      - "10.1186/s13756-024-01464-8"  # Federated systems for automated infection surveillance: a perspective (2024)
+      - "10.1007/978-3-031-08999-2_1"  # A Review of Medical Federated Learning: Applications in Oncology and Cancer Research (2022)
+
+  # c22
+  - id: c22_pt
+    lang: pt
+    concept: c22
+    question: "Conceitos centrais para garantir equidade de dados em saúde pública"
+    relevant:
+      - "10.1001/jamahealthforum.2025.6031"  # Ten Core Concepts for Ensuring Data Equity in Public Health (2026)
+
+  - id: c22_en
+    lang: en
+    concept: c22
+    question: "Core concepts for ensuring data equity in public health"
+    relevant:
+      - "10.1001/jamahealthforum.2025.6031"  # Ten Core Concepts for Ensuring Data Equity in Public Health (2026)
+
+  # c23
+  - id: c23_pt
+    lang: pt
+    concept: c23
+    question: "Representação estatística e análise de dados de feminicídio no Brasil"
+    relevant:
+      - "10.1007/s00414-025-03419-z"  # Strategies to overcome barriers to the statistical representation of femicide data-a technical note (2025)
+      - "MULHERES ASSASSINADAS NO BRASIL: O QUE REVELA E ESCONDE OS MAPAS?"  # (no DOI — title match)
+      - "10.48550/arXiv.2401.12980"  # Identifying Risk Patterns in Brazilian Police Reports Preceding Femicides: A Long Short Term Memory (LSTM) Based Analysis (2024)
+
+  - id: c23_en
+    lang: en
+    concept: c23
+    question: "Statistical representation and analysis of femicide data in Brazil"
+    relevant:
+      - "10.1007/s00414-025-03419-z"  # Strategies to overcome barriers to the statistical representation of femicide data-a technical note (2025)
+      - "MULHERES ASSASSINADAS NO BRASIL: O QUE REVELA E ESCONDE OS MAPAS?"  # (no DOI — title match)
+      - "10.48550/arXiv.2401.12980"  # Identifying Risk Patterns in Brazilian Police Reports Preceding Femicides: A Long Short Term Memory (LSTM) Based Analysis (2024)
