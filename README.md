@@ -21,15 +21,20 @@ ingest/                  # workspace member
 ├── zotero_reader.py     # Zotero SQLite → polars DataFrame
 ├── parser.py            # docling PDF/HTML → markdown text
 ├── chunker.py           # header-aware recursive split + sentence overlap
-├── embedder.py          # Ollama embed → LanceDB (idempotent per item_id)
+├── embedder.py          # embed (via embeddings pkg) → LanceDB (idempotent per item_id)
 └── main.py              # orchestrator: cascade pdf → abstract → title
+
+embeddings/              # workspace package (shared by ingest + retrieval)
+└── embed.py             # provider-agnostic embeddings (LiteLLM): doc/query prefixes,
+                         # dimension, EMBED_PROVIDER routing — one source for both sides
 
 retrieval/               # workspace package (installed as a dependency of app)
 ├── search.py            # query → embed → LanceDB top-k + metadata
+├── llm.py               # provider-agnostic answer streaming (LiteLLM)
 └── prompt.py            # LLM prompt template + inline citations
 
 app/                     # workspace member
-└── main.py              # Chainlit chat: search → prompt → Ollama stream + refs
+└── main.py              # Chainlit chat: search → prompt → LLM stream + refs
 ```
 
 
@@ -92,7 +97,10 @@ All knobs in `.env`:
 | `ZOTERO_STORAGE` | `~/Zotero/storage` | optional override |
 | `LANCEDB_PATH` | `./data/lancedb` | vector store on disk |
 | `OLLAMA_HOST` | `http://localhost:11434` | replaced inside Docker |
-| `EMBED_MODEL` | `nomic-embed-text` | 768-dim, matches schema |
+| `EMBED_PROVIDER` | `ollama` | `ollama` \| `openai` (the latter also covers any OpenAI-compatible endpoint via `EMBED_BASE_URL`) |
+| `EMBED_MODEL` | `nomic-embed-text` | known task-prefixed models get the right prefix automatically |
+| `EMBED_DIM` | `768` | must match the model's real output (`nomic-embed-text`=768, `bge-m3`=1024); changing it requires a full re-ingest |
+| `EMBED_BASE_URL` | _(unset)_ | optional: OpenAI-compatible embedding endpoint (local MLX/LM Studio, etc.) |
 | `LLM_PROVIDER` | `ollama` | `ollama` \| `claude` \| `openai` |
 | `LLM_MODEL` | `qwen2.5:7b-instruct` | swap freely, response quality varies |
 | `TOP_K` | `15` | chunks retrieved per query |
