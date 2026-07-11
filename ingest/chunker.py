@@ -134,7 +134,7 @@ if __name__ == "__main__":
         logger.error("usage: python chunker.py <text-file>")
         sys.exit(1)
 
-    content = Path(sys.argv[1]).read_text()
+    content = Path(sys.argv[1]).read_text(encoding="utf-8")
     chunks = chunk_text(content)
     logger.info(f"produced {len(chunks)} chunks from {len(content)} chars")
     for index, chunk in enumerate(chunks[:3], start=1):
