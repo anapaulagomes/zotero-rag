@@ -175,6 +175,7 @@ cython_debug/
 
 # Zotero RAG: regenerable LanceDB shards
 data/
+.files
 
 # Chainlit runtime artifacts (translations, caches) — only the project config is committed
 app/.chainlit/*
@@ -185,3 +186,4 @@ chainlit.md
 
 # Parser smoke-test stderr capture etc
 *.log
+
