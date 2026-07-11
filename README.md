@@ -68,7 +68,7 @@ uv run pre-commit install      # optional: wire ruff hooks
 uv run python ingest/main.py
 
 # 2. UI
-uv run chainlit run app/main.py
+uv run chainlit run app/main.py --port 8009
 # open http://localhost:8000
 ```
 
