@@ -73,8 +73,9 @@ def _split_relevant(relevant: list[str]) -> tuple[set[str], set[str]]:
     """
     dois, titles = set(), set()
     for entry in relevant:
-        if _DOI_RE.match(_norm_doi(entry)):
-            dois.add(_norm_doi(entry))
+        normalized_doi = _norm_doi(entry)
+        if _DOI_RE.match(normalized_doi):
+            dois.add(normalized_doi)
         else:
             titles.add(_norm_title(entry))
     return dois, titles
@@ -122,7 +123,7 @@ def main() -> None:
     model = os.environ.get("EMBED_MODEL", "?")
     dim = os.environ.get("EMBED_DIM", "?")
 
-    data = yaml.safe_load(QUESTIONS_PATH.read_text())
+    data = yaml.safe_load(QUESTIONS_PATH.read_text(encoding="utf-8"))
     questions = data["questions"]
 
     logger.info(f"eval: model={model} dim={dim} index={db_path} top_k={TOP_K} n={len(questions)}")
