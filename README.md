@@ -69,7 +69,7 @@ uv run python ingest/main.py
 
 # 2. UI
 uv run chainlit run app/main.py --port 8009
-# open http://localhost:8000
+# open http://localhost:8009
 ```
 
 Ingestion takes ~6-7h on M4 / ~10h on M1 for a ~1000-paper library.
