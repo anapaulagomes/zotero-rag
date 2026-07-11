@@ -26,17 +26,19 @@ def _index_summary() -> str:
         return empty_message
 
     df = pl.from_arrow(table.to_arrow()).select(["item_id", "title", "year"])
-    unique_papers = df.unique(subset=["item_id"]).sort("item_id", descending=True)
+    # item_id ascends with Zotero insertion order, so a descending sort surfaces the
+    # most recently added items (not necessarily the newest by publication year).
+    recently_added = df.unique(subset=["item_id"]).sort("item_id", descending=True)
 
     sample_lines = []
-    for row in unique_papers.head(5).iter_rows(named=True):
+    for row in recently_added.head(5).iter_rows(named=True):
         title = (row["title"] or "(untitled)")[:90]
         year = row["year"] if row["year"] is not None else "?"
         sample_lines.append(f"- *{title}* ({year})")
 
     return (
-        f"**{len(unique_papers)} papers** in the index ({total_chunks} chunks).\n\n"
-        "Most recent:\n" + "\n".join(sample_lines)
+        f"**{len(recently_added)} papers** in the index ({total_chunks} chunks).\n\n"
+        "Recently added:\n" + "\n".join(sample_lines)
     )
 
 
