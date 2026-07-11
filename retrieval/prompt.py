@@ -1,14 +1,22 @@
+import re
+
 from loguru import logger
 
 SYSTEM_PROMPT = """\
 You are a research assistant that answers questions based on excerpts from academic papers.
+
+Each excerpt is prefixed with a source marker like [S1] and the paper's author and year.
 
 RULES:
 - Respond in the same language the user asked the question in.
 - Base your answer ONLY on the excerpts provided. Do not invent information.
 - Synthesize across excerpts: compare, contrast and connect findings from
   different papers when relevant.
-- Cite authors and year inline, in the format: (Silva et al., 2021).
+- Cite inline using the source marker in square brackets exactly as given, e.g.
+  [S1]. Prefer the author and year for readability, followed by the marker:
+  (Silva et al., 2021) [S1].
+- Cite ONLY the provided sources. Never cite a work mentioned inside an excerpt's
+  text unless it is itself one of the provided sources.
 - If the answer is not in the excerpts, say so explicitly (in the user's language)."""
 
 USER_TEMPLATE = """\
@@ -17,17 +25,64 @@ EXCERPTS:
 
 QUESTION: {query}"""
 
+_BRACKET_GROUP = re.compile(r"\[([^\]]*)\]")
+_MARKER = re.compile(r"S\d+")
+
+
+def _markers_for(results: list[dict]) -> list[str]:
+    """Assign one marker per result, shared across chunks of the same paper.
+
+    Papers are keyed by item_id; chunks lacking one fall back to object identity so
+    they never collapse together. Markers are numbered by first appearance: S1, S2, ...
+    """
+    assigned: dict[object, str] = {}
+    markers = []
+    for result in results:
+        key = result.get("item_id")
+        if key is None:
+            key = id(result)
+        if key not in assigned:
+            assigned[key] = f"S{len(assigned) + 1}"
+        markers.append(assigned[key])
+    return markers
+
 
 def build_user_prompt(query: str, results: list[dict]) -> str:
     """Compose the user message: retrieved chunks + question.
 
+    Each excerpt is tagged with the source marker its paper will be cited by.
     System-level rules (role, citation format, language) live in SYSTEM_PROMPT.
     """
+    markers = _markers_for(results)
     chunk_blocks = [
-        f"[{index}] {_format_citation(result)}\n{result['text']}"
-        for index, result in enumerate(results, start=1)
+        f"[{marker}] {_format_citation(result)}\n{result['text']}"
+        for marker, result in zip(markers, results, strict=True)
     ]
     return USER_TEMPLATE.format(chunks="\n\n".join(chunk_blocks), query=query)
+
+
+def unique_sources(results: list[dict]) -> dict[str, dict]:
+    """Map each source marker to the first chunk of its paper, in appearance order."""
+    sources: dict[str, dict] = {}
+    for marker, result in zip(_markers_for(results), results, strict=True):
+        sources.setdefault(marker, result)
+    return sources
+
+
+def cited_markers(answer: str) -> list[str]:
+    """Extract the source markers the model actually cited, in first-seen order.
+
+    Only markers inside square brackets count, so prose like "the S1 protein" is
+    ignored. Grouped citations such as [S1, S2] are split into individual markers.
+    """
+    seen: set[str] = set()
+    ordered = []
+    for group in _BRACKET_GROUP.findall(answer):
+        for marker in _MARKER.findall(group):
+            if marker not in seen:
+                seen.add(marker)
+                ordered.append(marker)
+    return ordered
 
 
 def _format_citation(result: dict) -> str:
