@@ -4,7 +4,7 @@ import polars as pl
 from config import get_settings
 from llm import stream_chat
 from loguru import logger
-from prompt import SYSTEM_PROMPT, build_user_prompt
+from prompt import SYSTEM_PROMPT, build_user_prompt, cited_markers, unique_sources
 from search import search
 
 
@@ -64,45 +64,71 @@ async def on_message(message: cl.Message) -> None:
     user_prompt = build_user_prompt(query, results)
     response_message = cl.Message(content="")
 
+    answer = ""
     try:
         async for token in stream_chat(SYSTEM_PROMPT, user_prompt):
+            answer += token
             await response_message.stream_token(token)
     except Exception as exc:
         logger.exception("llm stream failed")
         await cl.Message(content=f"LLM call failed: {exc}").send()
         return
 
+    cited = _cited_sources(results, answer)
+
+    # Attaching a Text element named after each marker turns every [S7] in the answer
+    # into a link that opens that reference in the side panel (Chainlit matches element
+    # names against the message text). Longer markers win, so S1 never grabs S10/S13.
+    response_message.elements = [
+        cl.Text(name=marker, content=_reference_entry(marker, result), display="side")
+        for marker, result in cited
+    ]
     await response_message.send()
-    await cl.Message(content=_format_references(results)).send()
+
+    references = _format_references(cited)
+    if references:
+        await cl.Message(content=references).send()
 
 
-def _format_references(results: list[dict]) -> str:
-    seen: set[int] = set()
+def _cited_sources(results: list[dict], answer: str) -> list[tuple[str, dict]]:
+    """The (marker, paper) pairs the answer actually cited, in marker order.
+
+    Markers come from `unique_sources` (one per paper); `cited_markers` reads back
+    which ones the model used, so uncited retrieved papers stay out.
+    """
+    cited = set(cited_markers(answer))
+    return [
+        (marker, result) for marker, result in unique_sources(results).items() if marker in cited
+    ]
+
+
+def _reference_entry(marker: str, result: dict) -> str:
+    author = result.get("author") or "Unknown author"
+    year = result.get("year") or "n.d."
+    title = result.get("title") or "(untitled)"
+    journal = result.get("journal") or ""
+    doi = result.get("doi") or ""
+    pdf_path = result.get("pdf_path")
+    url = result.get("url") or ""
+
+    entry = f"**[{marker}] {author}** ({year}) — *{title}*"
+    if journal:
+        entry += f", {journal}"
+    if doi:
+        entry += f"\n   doi: [{doi}](https://doi.org/{doi})"
+    if url:
+        entry += f"\n   {url}"
+    if pdf_path:
+        entry += f"\n   `{pdf_path}`"
+    return entry
+
+
+def _format_references(cited: list[tuple[str, dict]]) -> str:
+    if not cited:
+        return ""
+
     lines = ["**References**", ""]
-    for result in results:
-        item_id = result.get("item_id")
-        if item_id in seen:
-            continue
-        seen.add(item_id)
-
-        author = result.get("author") or "Unknown author"
-        year = result.get("year") or "n.d."
-        title = result.get("title") or "(untitled)"
-        journal = result.get("journal") or ""
-        doi = result.get("doi") or ""
-        pdf_path = result.get("pdf_path")
-        url = result.get("url") or ""
-
-        entry = f"**{author}** ({year}) — *{title}*"
-        if journal:
-            entry += f", {journal}"
-        if doi:
-            entry += f"\n   doi: [{doi}](https://doi.org/{doi})"
-        if url:
-            entry += f"\n   {url}"
-        if pdf_path:
-            entry += f"\n   `{pdf_path}`"
-        lines.append(entry)
+    for marker, result in cited:
+        lines.append(_reference_entry(marker, result))
         lines.append("")
-
     return "\n".join(lines)
