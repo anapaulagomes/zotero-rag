@@ -47,9 +47,13 @@ app/                     # workspace member
 
 Pull the models once:
 ```bash
-ollama pull nomic-embed-text
+ollama pull nomic-embed-text   # or: ollama pull bge-m3 (recommended for multilingual libraries)
 ollama pull qwen2.5:7b-instruct
 ```
+
+For a multilingual setup — e.g. asking in Portuguese over English papers — use
+`bge-m3` (set `EMBED_MODEL=bge-m3` and `EMBED_DIM=1024`). It retrieves across
+languages far better than `nomic-embed-text`, which is English-centric.
 
 ## Setup
 
@@ -98,7 +102,7 @@ All knobs in `.env`:
 | `LANCEDB_PATH` | `./data/lancedb` | vector store on disk |
 | `OLLAMA_HOST` | `http://localhost:11434` | replaced inside Docker |
 | `EMBED_PROVIDER` | `ollama` | `ollama` \| `openai` (the latter also covers any OpenAI-compatible endpoint via `EMBED_BASE_URL`) |
-| `EMBED_MODEL` | `nomic-embed-text` | known task-prefixed models get the right prefix automatically |
+| `EMBED_MODEL` | `nomic-embed-text` | known task-prefixed models get the right prefix automatically; use `bge-m3` for multilingual libraries |
 | `EMBED_DIM` | `768` | must match the model's real output (`nomic-embed-text`=768, `bge-m3`=1024); changing it requires a full re-ingest |
 | `EMBED_BASE_URL` | _(unset)_ | optional: OpenAI-compatible embedding endpoint (local MLX/LM Studio, etc.) |
 | `LLM_PROVIDER` | `ollama` | `ollama` \| `claude` \| `openai` |
